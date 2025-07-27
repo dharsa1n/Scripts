@@ -1,319 +1,252 @@
--- RGB Item Duper GUI for Roblox
--- Checks for "age" in item name and allows duplication
+-- Modern Age Dupe GUI for Roblox Executor
+-- Compatible with mobile and PC
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Remove existing GUI if present
-if playerGui:FindFirstChild("ItemDuperGUI") then
-    playerGui.ItemDuperGUI:Destroy()
-end
-
--- Create main ScreenGui
+-- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ItemDuperGUI"
-screenGui.Parent = playerGui
+screenGui.Name = "AgeDupeGUI"
 screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
 
--- Main frame
+-- Main Frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Parent = screenGui
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-mainFrame.Size = UDim2.new(0, 400, 0, 250)
+mainFrame.Size = UDim2.new(0, 350, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 mainFrame.BorderSizePixel = 0
-mainFrame.Active = true
-mainFrame.Draggable = true
+mainFrame.Parent = screenGui
 
 -- Add corner radius
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 10)
-mainCorner.Parent = mainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
 
--- RGB Border
-local rgbBorder = Instance.new("UIStroke")
-rgbBorder.Color = Color3.fromRGB(255, 0, 0)
-rgbBorder.Thickness = 2
-rgbBorder.Parent = mainFrame
+-- RGB Border Effect
+local border = Instance.new("Frame")
+border.Name = "RGBBorder"
+border.Size = UDim2.new(1, 4, 1, 4)
+border.Position = UDim2.new(0, -2, 0, -2)
+border.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+border.BorderSizePixel = 0
+border.ZIndex = mainFrame.ZIndex - 1
+border.Parent = mainFrame
 
--- Title bar
+local borderCorner = Instance.new("UICorner")
+borderCorner.CornerRadius = UDim.new(0, 14)
+borderCorner.Parent = border
+
+-- RGB Animation
+local function animateRGB()
+    local colors = {
+        Color3.fromRGB(255, 0, 0),   -- Red
+        Color3.fromRGB(255, 128, 0), -- Orange
+        Color3.fromRGB(255, 255, 0), -- Yellow
+        Color3.fromRGB(0, 255, 0),   -- Green
+        Color3.fromRGB(0, 255, 255), -- Cyan
+        Color3.fromRGB(0, 0, 255),   -- Blue
+        Color3.fromRGB(128, 0, 255), -- Purple
+        Color3.fromRGB(255, 0, 255)  -- Magenta
+    }
+    
+    local colorIndex = 1
+    spawn(function()
+        while border.Parent do
+            local tween = TweenService:Create(border, TweenInfo.new(0.5), {BackgroundColor3 = colors[colorIndex]})
+            tween:Play()
+            colorIndex = colorIndex + 1
+            if colorIndex > #colors then colorIndex = 1 end
+            wait(0.5)
+        end
+    end)
+end
+animateRGB()
+
+-- Title Bar
 local titleBar = Instance.new("Frame")
 titleBar.Name = "TitleBar"
-titleBar.Parent = mainFrame
 titleBar.Size = UDim2.new(1, 0, 0, 35)
 titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = titleBar
 
--- Title text
+-- Fix title bar corners
+local titleFix = Instance.new("Frame")
+titleFix.Size = UDim2.new(1, 0, 0, 12)
+titleFix.Position = UDim2.new(0, 0, 1, -12)
+titleFix.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+titleFix.BorderSizePixel = 0
+titleFix.Parent = titleBar
+
+-- Title Text
 local titleText = Instance.new("TextLabel")
 titleText.Name = "TitleText"
-titleText.Parent = titleBar
-titleText.Position = UDim2.new(0, 10, 0, 0)
 titleText.Size = UDim2.new(1, -80, 1, 0)
+titleText.Position = UDim2.new(0, 10, 0, 0)
 titleText.BackgroundTransparency = 1
-titleText.Text = "Age Item Duper"
+titleText.Text = "Age Dupe GUI"
 titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleText.TextScaled = true
 titleText.Font = Enum.Font.GothamBold
-titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = titleBar
 
--- Minimize button
+-- Minimize Button
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Name = "MinimizeBtn"
-minimizeBtn.Parent = titleBar
+minimizeBtn.Size = UDim2.new(0, 30, 0, 25)
 minimizeBtn.Position = UDim2.new(1, -70, 0, 5)
-minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-minimizeBtn.Text = "-"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 193, 7)
+minimizeBtn.Text = "−"
 minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 minimizeBtn.TextScaled = true
 minimizeBtn.Font = Enum.Font.GothamBold
 minimizeBtn.BorderSizePixel = 0
+minimizeBtn.Parent = titleBar
 
 local minCorner = Instance.new("UICorner")
-minCorner.CornerRadius = UDim.new(0, 5)
+minCorner.CornerRadius = UDim.new(0, 6)
 minCorner.Parent = minimizeBtn
 
--- Close button
+-- Close Button
 local closeBtn = Instance.new("TextButton")
 closeBtn.Name = "CloseBtn"
-closeBtn.Parent = titleBar
-closeBtn.Position = UDim2.new(1, -40, 0, 5)
-closeBtn.Size = UDim2.new(0, 25, 0, 25)
-closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-closeBtn.Text = "X"
+closeBtn.Size = UDim2.new(0, 30, 0, 25)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
+closeBtn.Text = "×"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeBtn.TextScaled = true
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.BorderSizePixel = 0
+closeBtn.Parent = titleBar
 
 local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 5)
+closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeBtn
 
--- Content frame
+-- Content Frame
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
-contentFrame.Parent = mainFrame
-contentFrame.Position = UDim2.new(0, 10, 0, 45)
-contentFrame.Size = UDim2.new(1, -20, 1, -55)
+contentFrame.Size = UDim2.new(1, -20, 1, -45)
+contentFrame.Position = UDim2.new(0, 10, 0, 40)
 contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
 
--- Status label
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Name = "StatusLabel"
-statusLabel.Parent = contentFrame
-statusLabel.Position = UDim2.new(0, 0, 0, 0)
-statusLabel.Size = UDim2.new(1, 0, 0, 30)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Hold an item with 'age' in its name"
-statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-statusLabel.TextScaled = true
-statusLabel.Font = Enum.Font.Gotham
-
--- Amount label
+-- Amount Label
 local amountLabel = Instance.new("TextLabel")
 amountLabel.Name = "AmountLabel"
-amountLabel.Parent = contentFrame
-amountLabel.Position = UDim2.new(0, 0, 0, 40)
-amountLabel.Size = UDim2.new(0, 100, 0, 25)
+amountLabel.Size = UDim2.new(1, 0, 0, 25)
+amountLabel.Position = UDim2.new(0, 0, 0, 10)
 amountLabel.BackgroundTransparency = 1
-amountLabel.Text = "Amount:"
-amountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+amountLabel.Text = "Dupe Amount:"
+amountLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 amountLabel.TextScaled = true
 amountLabel.Font = Enum.Font.Gotham
 amountLabel.TextXAlignment = Enum.TextXAlignment.Left
+amountLabel.Parent = contentFrame
 
--- Amount textbox (numbers only)
+-- Amount TextBox (Numbers only)
 local amountBox = Instance.new("TextBox")
 amountBox.Name = "AmountBox"
-amountBox.Parent = contentFrame
-amountBox.Position = UDim2.new(0, 110, 0, 40)
-amountBox.Size = UDim2.new(1, -110, 0, 25)
+amountBox.Size = UDim2.new(1, 0, 0, 35)
+amountBox.Position = UDim2.new(0, 0, 0, 40)
 amountBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+amountBox.BorderSizePixel = 0
 amountBox.Text = "1"
 amountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 amountBox.TextScaled = true
 amountBox.Font = Enum.Font.Gotham
-amountBox.PlaceholderText = "Enter number only"
+amountBox.PlaceholderText = "Enter amount..."
+amountBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+amountBox.Parent = contentFrame
 
 local boxCorner = Instance.new("UICorner")
-boxCorner.CornerRadius = UDim.new(0, 5)
+boxCorner.CornerRadius = UDim.new(0, 8)
 boxCorner.Parent = amountBox
 
-local boxBorder = Instance.new("UIStroke")
-boxBorder.Color = Color3.fromRGB(70, 70, 80)
-boxBorder.Thickness = 1
-boxBorder.Parent = amountBox
+-- Numbers only input
+amountBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local text = amountBox.Text
+    local numbersOnly = text:gsub("[^%d]", "")
+    if text ~= numbersOnly then
+        amountBox.Text = numbersOnly
+    end
+end)
 
--- Item info label
-local itemLabel = Instance.new("TextLabel")
-itemLabel.Name = "ItemLabel"
-itemLabel.Parent = contentFrame
-itemLabel.Position = UDim2.new(0, 0, 0, 75)
-itemLabel.Size = UDim2.new(1, 0, 0, 40)
-itemLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-itemLabel.Text = "No valid item selected"
-itemLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-itemLabel.TextScaled = true
-itemLabel.Font = Enum.Font.Gotham
-
-local itemCorner = Instance.new("UICorner")
-itemCorner.CornerRadius = UDim.new(0, 5)
-itemCorner.Parent = itemLabel
-
--- Dupe button
+-- Dupe Button
 local dupeBtn = Instance.new("TextButton")
 dupeBtn.Name = "DupeBtn"
-dupeBtn.Parent = contentFrame
-dupeBtn.Position = UDim2.new(0, 0, 0, 125)
 dupeBtn.Size = UDim2.new(1, 0, 0, 40)
-dupeBtn.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
-dupeBtn.Text = "DUPLICATE ITEM"
+dupeBtn.Position = UDim2.new(0, 0, 0, 90)
+dupeBtn.BackgroundColor3 = Color3.fromRGB(40, 167, 69)
+dupeBtn.Text = "DUPE ITEM"
 dupeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 dupeBtn.TextScaled = true
 dupeBtn.Font = Enum.Font.GothamBold
 dupeBtn.BorderSizePixel = 0
+dupeBtn.Parent = contentFrame
 
 local dupeCorner = Instance.new("UICorner")
 dupeCorner.CornerRadius = UDim.new(0, 8)
 dupeCorner.Parent = dupeBtn
 
--- RGB Animation
-local function animateRGB()
-    local hue = 0
-    RunService.Heartbeat:Connect(function()
-        hue = (hue + 2) % 360
-        local color = Color3.fromHSV(hue / 360, 1, 1)
-        rgbBorder.Color = color
-        titleText.TextColor3 = color
-    end)
+-- Status Label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
+statusLabel.Position = UDim2.new(0, 0, 1, -25)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Ready"
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.TextScaled = true
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.Parent = contentFrame
+
+-- Drag functionality
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
--- Number only input validation
-amountBox.Changed:Connect(function(property)
-    if property == "Text" then
-        local text = amountBox.Text
-        local numbersOnly = string.gsub(text, "[^%d]", "")
-        if text ~= numbersOnly then
-            amountBox.Text = numbersOnly
-        end
-        if amountBox.Text == "" then
-            amountBox.Text = "1"
-        end
-    end
-end)
-
--- Check held item function
-local function checkHeldItem()
-    local character = player.Character
-    if not character then return nil end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not humanoid then return nil end
-    
-    -- Check for equipped tools
-    local tool = character:FindFirstChildOfClass("Tool")
-    if tool and string.find(string.lower(tool.Name), "age") then
-        return tool
-    end
-    
-    -- Check backpack for tools with "age" in name
-    local backpack = player:FindFirstChild("Backpack")
-    if backpack then
-        for _, item in pairs(backpack:GetChildren()) do
-            if item:IsA("Tool") and string.find(string.lower(item.Name), "age") then
-                return item
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
             end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            updateInput(input)
         end
     end
-    
-    return nil
-end
-
--- Update item status
-local function updateItemStatus()
-    local item = checkHeldItem()
-    if item then
-        itemLabel.Text = "Valid item: " .. item.Name
-        itemLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-        dupeBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
-        statusLabel.Text = "Ready to duplicate!"
-        return true
-    else
-        itemLabel.Text = "No valid item found"
-        itemLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        dupeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        statusLabel.Text = "Hold an item with 'age' in its name"
-        return false
-    end
-end
-
--- Duplication function
-local function duplicateItem()
-    local item = checkHeldItem()
-    if not item then
-        statusLabel.Text = "No valid item to duplicate!"
-        return
-    end
-    
-    local amount = tonumber(amountBox.Text) or 1
-    if amount <= 0 then amount = 1 end
-    if amount > 100 then amount = 100 end -- Limit for safety
-    
-    statusLabel.Text = "Duplicating " .. item.Name .. " x" .. amount .. "..."
-    
-    -- Basic duplication logic (modify based on your executor's capabilities)
-    for i = 1, amount do
-        local clone = item:Clone()
-        clone.Parent = player.Backpack
-        wait(0.1) -- Small delay to prevent overwhelming
-    end
-    
-    statusLabel.Text = "Duplicated " .. amount .. " items successfully!"
-    wait(2)
-    updateItemStatus()
-end
-
--- Button connections
-closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
 end)
 
-minimizeBtn.MouseButton1Click:Connect(function()
-    if mainFrame.Size == UDim2.new(0, 400, 0, 250) then
-        -- Minimize
-        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 400, 0, 35)}):Play()
-        contentFrame.Visible = false
-        minimizeBtn.Text = "+"
-    else
-        -- Restore
-        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 400, 0, 250)}):Play()
-        contentFrame.Visible = true
-        minimizeBtn.Text = "-"
-    end
-end)
-
-dupeBtn.MouseButton1Click:Connect(function()
-    if updateItemStatus() then
-        duplicateItem()
-    end
-end)
-
--- Hover effects
-local function addHoverEffect(button, normalColor, hoverColor)
+-- Button animations
+local function animateButton(button, hoverColor, normalColor)
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
     end)
@@ -323,21 +256,94 @@ local function addHoverEffect(button, normalColor, hoverColor)
     end)
 end
 
-addHoverEffect(closeBtn, Color3.fromRGB(255, 100, 100), Color3.fromRGB(255, 150, 150))
-addHoverEffect(minimizeBtn, Color3.fromRGB(255, 200, 0), Color3.fromRGB(255, 220, 50))
+animateButton(minimizeBtn, Color3.fromRGB(255, 213, 27), Color3.fromRGB(255, 193, 7))
+animateButton(closeBtn, Color3.fromRGB(240, 73, 89), Color3.fromRGB(220, 53, 69))
+animateButton(dupeBtn, Color3.fromRGB(60, 187, 89), Color3.fromRGB(40, 167, 69))
 
--- Start RGB animation
-animateRGB()
+-- Minimize functionality
+local minimized = false
+local originalSize = mainFrame.Size
 
--- Update item status every second
-spawn(function()
-    while screenGui.Parent do
-        updateItemStatus()
-        wait(1)
+minimizeBtn.MouseButton1Click:Connect(function()
+    if minimized then
+        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = originalSize}):Play()
+        contentFrame.Visible = true
+        minimizeBtn.Text = "−"
+        minimized = false
+    else
+        TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 350, 0, 35)}):Play()
+        contentFrame.Visible = false
+        minimizeBtn.Text = "+"
+        minimized = true
     end
 end)
 
--- Initial setup
-updateItemStatus()
+-- Close functionality
+closeBtn.MouseButton1Click:Connect(function()
+    TweenService:Create(mainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+    wait(0.3)
+    screenGui:Destroy()
+end)
 
-print("RGB Item Duper GUI loaded successfully!")
+-- Main dupe function
+local function dupeItem()
+    local character = player.Character
+    if not character then
+        statusLabel.Text = "Character not found!"
+        statusLabel.TextColor3 = Color3.fromRGB(220, 53, 69)
+        return
+    end
+    
+    local tool = character:FindFirstChildOfClass("Tool")
+    if not tool then
+        statusLabel.Text = "No item in hand!"
+        statusLabel.TextColor3 = Color3.fromRGB(220, 53, 69)
+        return
+    end
+    
+    -- Check if item name contains "age"
+    if not string.find(tool.Name:lower(), "age") then
+        statusLabel.Text = "Item doesn't contain 'age'!"
+        statusLabel.TextColor3 = Color3.fromRGB(220, 53, 69)
+        return
+    end
+    
+    local amount = tonumber(amountBox.Text) or 1
+    if amount <= 0 then amount = 1 end
+    if amount > 100 then amount = 100 end -- Safety limit
+    
+    statusLabel.Text = "Duping " .. amount .. "x " .. tool.Name
+    statusLabel.TextColor3 = Color3.fromRGB(255, 193, 7)
+    
+    -- Dupe logic (basic example - modify based on game)
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        for i = 1, amount do
+            local clone = tool:Clone()
+            clone.Parent = backpack
+            wait(0.1) -- Small delay
+        end
+        
+        statusLabel.Text = "Successfully duped " .. amount .. "x!"
+        statusLabel.TextColor3 = Color3.fromRGB(40, 167, 69)
+    else
+        statusLabel.Text = "Backpack not found!"
+        statusLabel.TextColor3 = Color3.fromRGB(220, 53, 69)
+    end
+end
+
+-- Dupe button click
+dupeBtn.MouseButton1Click:Connect(function()
+    dupeItem()
+end)
+
+-- Reset status after 3 seconds
+spawn(function()
+    while mainFrame.Parent do
+        wait(3)
+        if statusLabel.Text ~= "Ready" and not string.find(statusLabel.Text:lower(), "duping") then
+            statusLabel.Text = "Ready"
+            statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end
+end)
