@@ -1,0 +1,199 @@
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Danger Hub",
+    LoadingTitle = "Danger Hub Loading...",
+    LoadingSubtitle = "Grow a Garden Utility",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "DangerHub",
+        FileName = "DangerConfig"
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- === MAIN TAB ===
+local MainTab = Window:CreateTab("Main", 4483362458)
+
+MainTab:CreateParagraph({
+    Title = "Welcome!",
+    Content = "Hello " .. LocalPlayer.DisplayName .. ", welcome to Danger Hub."
+})
+
+local locations = {
+    ["Event Area"] = Vector3.new(-119.69, 3.00, -14.97),
+    ["Gear Shop"] = Vector3.new(-285.27, 3.00, -13.62),
+    ["Pet Eggs Shop"] = Vector3.new(-287.34, 3.00, -0.91),
+    ["Cosmetics Shop"] = Vector3.new(-286.11, 3.00, -24.29),
+    ["Garden 1"] = Vector3.new(33.44, 3.00, 38.34),
+    ["Garden 2"] = Vector3.new(-100.65, 3.00, 38.08),
+    ["Garden 3"] = Vector3.new(-237.85, 3.00, 38.51),
+    ["Garden 4"] = Vector3.new(34.44, 3.00, -65.85),
+    ["Garden 5"] = Vector3.new(-98.96, 3.00, -65.37),
+    ["Garden 6"] = Vector3.new(-235.72, 3.00, -70.17)
+}
+local selectedLocation = "Event Area"
+
+-- Convert keys into table manually
+local locationNames = {}
+for name, _ in pairs(locations) do
+    table.insert(locationNames, name)
+end
+
+MainTab:CreateDropdown({
+    Name = "Select Location",
+    Options = locationNames,
+    CurrentOption = "Event Area",
+    Callback = function(val)
+        selectedLocation = val
+    end
+})
+
+MainTab:CreateButton({
+    Name = "Teleport",
+    Callback = function()
+        local pos = locations[selectedLocation]
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+            Rayfield:Notify({Title = "Teleported", Content = "Moved to " .. selectedLocation, Duration = 4})
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 100},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Callback = function(val)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = val
+        end
+    end
+})
+
+-- === EASY TAB ===
+local EasyTab = Window:CreateTab("Easy-way", 4483362458)
+
+local function sellInventory(remoteName)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+    local original = root.CFrame
+
+    root.CFrame = CFrame.new(86.59, 3, 0.42)
+    task.wait(0.5)
+    for i = 1, 3 do
+        pcall(function()
+            game:GetService("ReplicatedStorage").GameEvents[remoteName]:FireServer()
+        end)
+        task.wait(0.2)
+    end
+    task.wait(1.5)
+    root.CFrame = original
+end
+
+EasyTab:CreateButton({
+    Name = "Sell All",
+    Callback = function()
+        sellInventory("Sell_Inventory")
+        Rayfield:Notify({Title = "Selling", Content = "All inventory items sold!", Duration = 3})
+    end
+})
+
+EasyTab:CreateButton({
+    Name = "Sell Item",
+    Callback = function()
+        sellInventory("Sell_Item")
+        Rayfield:Notify({Title = "Selling", Content = "Item in hand sold!", Duration = 3})
+    end
+})
+
+-- Shop GUI toggle
+local player = game.Players.LocalPlayer
+local originalStates = {}
+
+EasyTab:CreateToggle({
+    Name = "Toggle Shop GUI",
+    CurrentValue = false,
+    Callback = function(state)
+        local success, err = pcall(function()
+            local gui = player:WaitForChild("PlayerGui"):WaitForChild("Teleport_UI")
+            local frame = gui:WaitForChild("Frame")
+            local gear = frame:WaitForChild("Gear")
+            local pets = frame:WaitForChild("Pets")
+
+            if state then
+                originalStates = {
+                    gui = gui.Enabled,
+                    frame = frame.Visible,
+                    gear = gear.Visible,
+                    pets = pets.Visible
+                }
+                gui.Enabled = true
+                frame.Visible = true
+                gear.Visible = true
+                pets.Visible = true
+            else
+                gui.Enabled = originalStates.gui or false
+                frame.Visible = originalStates.frame or false
+                gear.Visible = originalStates.gear or false
+                pets.Visible = originalStates.pets or false
+            end
+        end)
+        if not success then
+            warn("Toggle error:", err)
+        end
+    end
+})
+
+-- === BETA TAB ===
+local BetaTab = Window:CreateTab("Beta", 4483362458)
+
+BetaTab:CreateButton({
+    Name = "Launch Sheckles Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ProGamerBoy610/Button-gui/refs/heads/main/get%20sheckles%20gui%20(gag)"))()
+    end
+})
+
+BetaTab:CreateButton({
+    Name = "Launch Pet Dupe Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/dharsa1n/Scripts/refs/heads/main/Grow%20a%20garden%20pet%20duplicate"))()
+    end
+})
+
+-- === INFO TAB ===
+local InfoTab = Window:CreateTab("Info", 4483362458)
+
+InfoTab:CreateParagraph({
+    Title = "Feedback",
+    Content = "Click the button below to open the feedback GUI. We read everything!"
+})
+
+InfoTab:CreateButton({
+    Name = "Open Feedback GUI",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ProGamerBoy610/FeedBack-Gui/refs/heads/main/Feedback%20gui"))()
+    end
+})
+
+-- === WHAT'S NEW TAB ===
+local NewTab = Window:CreateTab("What's New", 4483362458)
+
+NewTab:CreateParagraph({
+    Title = "🆕 Fruit Stealer Added!",
+    Content = "You can now steal from other players' backpacks."
+})
+
+NewTab:CreateParagraph({
+    Title = "📢 Updates in Progress",
+    Content = "New features are coming soon. Solo dev working hard!"
+})
